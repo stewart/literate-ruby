@@ -44,7 +44,7 @@ class LiterateRuby
       @ruby.lstrip!.strip!
     end
 
-    def syntax_highlight_ruby
+    def syntax_highlight_ruby_blocks
       @input.gsub! INDENTED_CODE_REGEX do |code|
         code.gsub!(/^[ ]{4}/ , '')
         code.strip!.lstrip!
@@ -59,6 +59,7 @@ class LiterateRuby
     end
 
     def convert_markdown
+      syntax_highlight_ruby_blocks
       markdown = RDiscount.new @input
       @html = markdown.to_html
     end
@@ -73,11 +74,10 @@ class LiterateRuby
       File.write ruby_filename, @ruby
     end
 
-    def run!
+    def start!
       check_args
       get_input
       extract_ruby
-      syntax_highlight_ruby
       convert_markdown
       export_html
       export_ruby
@@ -85,4 +85,4 @@ class LiterateRuby
   end
 end
 
-LiterateRuby.run!
+LiterateRuby.start!
