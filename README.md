@@ -71,6 +71,7 @@ highlighting.
 - support for processing a dir of `.litrb` fils
 - support for reading Literate Ruby from stdin and outputting html or ruby to
   stdout
+- gemify or otherwise turn into a binary
 
 ## License
 
