@@ -69,6 +69,8 @@ highlighting.
 
 - support for directly running `.litrb` files
 - support for processing a dir of `.litrb` fils
+- support for reading Literate Ruby from stdin and outputting html or ruby to
+  stdout
 
 ## License
 
