@@ -48,6 +48,23 @@ a function that prints "Hello World", then run it.</p>
 </pre></div>
 ```
 
+## Dependencies:
+
+Literate Ruby makes use of the following gems:
+
+- [rdicount][]
+- [pygments.rb][]
+
+To install RDiscount, you'll need at least a basic build system, since it's
+implemented in C.
+
+If you have a Pygments install (`which pygmentize`), Pygments.rb will use that.
+If not, it will need to use an external web service to perform syntax
+highlighting.
+
+[rdicount]: https://github.com/davidfstr/rdiscount/
+[pygments.rb]: https://github.com/tmm1/pygments.rb
+
 ## TODO:
 
 - support for directly running `.litrb` files
