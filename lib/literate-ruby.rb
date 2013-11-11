@@ -1,7 +1,7 @@
 require 'pygments'
-require 'rdiscount'
+require 'kramdown'
 
-class LiterateRuby
+module LiterateRuby
   class << self
     attr_reader :input, :ruby, :html, :basename
 
@@ -19,7 +19,7 @@ class LiterateRuby
 
     def print_help
       warn "  Usage:"
-      warn "    ruby literate-ruby.rb [FILE]"
+      warn "    literate-ruby [FILE].litrb"
       exit 1
     end
 
@@ -60,7 +60,7 @@ class LiterateRuby
 
     def convert_markdown
       syntax_highlight_ruby_blocks
-      markdown = RDiscount.new @input
+      markdown = Kramdown::Document.new @input
       @html = markdown.to_html
     end
 
@@ -84,5 +84,3 @@ class LiterateRuby
     end
   end
 end
-
-LiterateRuby.start!
