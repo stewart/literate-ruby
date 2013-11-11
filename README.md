@@ -52,17 +52,14 @@ a function that prints "Hello World", then run it.</p>
 
 Literate Ruby makes use of the following gems:
 
-- [rdicount][]
+- [kramdown][]
 - [pygments.rb][]
-
-To install RDiscount, you'll need at least a basic build system, since it's
-implemented in C.
 
 If you have a Pygments install (`which pygmentize`), Pygments.rb will use that.
 If not, it will need to use an external web service to perform syntax
 highlighting.
 
-[rdicount]: https://github.com/davidfstr/rdiscount/
+[kramdown]: http://kramdown.rubyforge.org
 [pygments.rb]: https://github.com/tmm1/pygments.rb
 
 ## TODO:
@@ -71,7 +68,6 @@ highlighting.
 - support for processing a dir of `.litrb` fils
 - support for reading Literate Ruby from stdin and outputting html or ruby to
   stdout
-- gemify or otherwise turn into a binary
 
 ## License
 
