@@ -1,0 +1,135 @@
+<h1 id="actor-model">Actor model</h1>
+
+<p>In this document, we’re going to define a simple version of the Actor pattern
+using Threads. This version comes from the Destroy All Software screencast
+<a href="http://www.destroyallsoftware.com/screencasts/catalog/actor-syntax-from-scratch">“Actor Syntax From Scratch”</a>, and I highly recommend you check it out.</p>
+
+<p>First of all, let’s require the ‘thread’ library:</p>
+
+<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;thread&#39;</span>
+</pre></div>
+
+<p>Now that we have our threading toolbox, we can begin setting up the behaviour of
+our actors. Let’s not clobber the global namespace, and leave our code under the
+<code>Actors</code> module:</p>
+
+<div class="highlight"><pre><span class="k">module</span> <span class="nn">Actors</span>
+</pre></div>
+
+<p>Actors build on OO programming, so let’s define an Actor class to perform work.</p>
+
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">Actor</span>
+</pre></div>
+
+<p>An Actor will have a single method, to run the block of work it’s been assigned.
+The work will be run in it’s own thread, and loop endlessly until we tell it to
+stop. If it encounters an exception, it will simply print the exception to the
+console.</p>
+
+<div class="highlight"><pre><span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">run</span>
+      <span class="no">Thread</span><span class="o">.</span><span class="n">new</span> <span class="k">do</span>
+        <span class="k">begin</span>
+          <span class="kp">loop</span> <span class="k">do</span>
+            <span class="nb">instance_eval</span><span class="p">(</span><span class="o">&amp;</span><span class="vi">@block</span><span class="p">)</span>
+          <span class="k">end</span>
+        <span class="k">rescue</span> <span class="no">Exception</span> <span class="o">=&gt;</span> <span class="n">e</span>
+          <span class="nb">puts</span> <span class="n">e</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+</pre></div>
+
+<p>You’ll note that the <code>run</code> method is looking for a <code>@block</code> variable. Since we
+haven’t assigned that yet, let’s add a method to do so now:</p>
+
+<div class="highlight"><pre><span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">add_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+      <span class="vi">@block</span> <span class="o">=</span> <span class="n">block</span>
+    <span class="k">end</span>
+</pre></div>
+
+<p>For our Actors mailboxes, we’ll use a simple queue. Actors can push and pop work
+onto the queue. This is fairly straightforward, so I’ll just define the methods:</p>
+
+<div class="highlight"><pre><span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">queue</span>
+      <span class="vi">@queue</span> <span class="o">||=</span> <span class="no">Queue</span><span class="o">.</span><span class="n">new</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">push</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="n">queue</span> <span class="o">&lt;&lt;</span> <span class="n">value</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">pop</span>
+      <span class="n">queue</span><span class="o">.</span><span class="n">pop</span>
+    <span class="k">end</span>
+
+  <span class="k">end</span>
+</pre></div>
+
+<p>This finishes everything we need for now in the Actor class, but we’re not quite
+done yet with the Actor module. We still need a way to define our actors and
+tell them all to run.</p>
+
+<p>First, we’d like to use this kind of syntax to define actors and their work:</p>
+
+<p>```
+module Actors
+  actor :Input do
+    Output.push gets
+  end</p>
+
+<p>actor :Output do
+    puts pop
+  end
+end
+```</p>
+
+<p>To support this, we need to define an <code>actor</code> function that will define the
+Actor’s name and work:</p>
+
+<div class="highlight"><pre><span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">actor</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+    <span class="n">klass</span> <span class="o">=</span> <span class="no">Class</span><span class="o">.</span><span class="n">new</span> <span class="no">Actor</span>
+    <span class="n">klass</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+    <span class="nb">const_set</span> <span class="nb">name</span><span class="p">,</span> <span class="n">klass</span>
+  <span class="k">end</span>
+</pre></div>
+
+<p>Next up, we want to be able to kickoff all of our actors at the same time.</p>
+
+<p>Ideally, we can start our Actors like this:</p>
+
+<p><code>
+Actors.run [Actors::Input, Actors::Output]
+</code></p>
+
+<p>Supporting this is simple enough:</p>
+
+<div class="highlight"><pre><span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">run</span><span class="p">(</span><span class="n">actors</span><span class="p">)</span>
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">actors</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:run</span><span class="p">)</span>
+    <span class="n">threads</span><span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:join</span><span class="p">)</span>
+  <span class="k">end</span>
+</pre></div>
+
+<p>That ties up everything we wanted to do with our Actors module, so let’s close
+it up:</p>
+
+<div class="highlight"><pre><span class="k">end</span>
+</pre></div>
+
+<h2 id="work">Work</h2>
+
+<p>Now that we’ve got our Actor backing logic and syntax set up, let’s actually run
+example from earlier. This will create an echo chamber that will return anything
+the user types:</p>
+
+<div class="highlight"><pre><span class="k">module</span> <span class="nn">Actors</span>
+  <span class="n">actor</span> <span class="ss">:Input</span> <span class="k">do</span>
+    <span class="no">Output</span><span class="o">.</span><span class="n">push</span> <span class="nb">gets</span>
+  <span class="k">end</span>
+
+  <span class="n">actor</span> <span class="ss">:Output</span> <span class="k">do</span>
+    <span class="nb">puts</span> <span class="n">pop</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">Actors</span><span class="o">.</span><span class="n">run</span> <span class="o">[</span><span class="no">Actors</span><span class="o">::</span><span class="no">Input</span><span class="p">,</span> <span class="no">Actors</span><span class="o">::</span><span class="no">Output</span><span class="o">]</span>
+</pre></div>

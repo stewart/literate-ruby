@@ -1,0 +1,127 @@
+# Actor model
+
+In this document, we're going to define a simple version of the Actor pattern
+using Threads. This version comes from the Destroy All Software screencast
+["Actor Syntax From Scratch"][das], and I highly recommend you check it out.
+
+[das]: http://www.destroyallsoftware.com/screencasts/catalog/actor-syntax-from-scratch
+
+First of all, let's require the 'thread' library:
+
+    require 'thread'
+
+Now that we have our threading toolbox, we can begin setting up the behaviour of
+our actors. Let's not clobber the global namespace, and leave our code under the
+`Actors` module:
+
+    module Actors
+
+Actors build on OO programming, so let's define an Actor class to perform work.
+
+      class Actor
+
+An Actor will have a single method, to run the block of work it's been assigned.
+The work will be run in it's own thread, and loop endlessly until we tell it to
+stop. If it encounters an exception, it will simply print the exception to the
+console.
+
+        def self.run
+          Thread.new do
+            begin
+              loop do
+                instance_eval(&@block)
+              end
+            rescue Exception => e
+              puts e
+            end
+          end
+        end
+
+You'll note that the `run` method is looking for a `@block` variable. Since we
+haven't assigned that yet, let's add a method to do so now:
+
+        def self.add_block(block)
+          @block = block
+        end
+
+For our Actors mailboxes, we'll use a simple queue. Actors can push and pop work
+onto the queue. This is fairly straightforward, so I'll just define the methods:
+
+        def self.queue
+          @queue ||= Queue.new
+        end
+
+        def self.push(value)
+          queue << value
+        end
+
+        def self.pop
+          queue.pop
+        end
+
+      end
+
+This finishes everything we need for now in the Actor class, but we're not quite
+done yet with the Actor module. We still need a way to define our actors and
+tell them all to run.
+
+First, we'd like to use this kind of syntax to define actors and their work:
+
+```
+module Actors
+  actor :Input do
+    Output.push gets
+  end
+
+  actor :Output do
+    puts pop
+  end
+end
+```
+
+To support this, we need to define an `actor` function that will define the
+Actor's name and work:
+
+      def self.actor(name, &block)
+        klass = Class.new Actor
+        klass.add_block(block)
+        const_set name, klass
+      end
+
+Next up, we want to be able to kickoff all of our actors at the same time.
+
+Ideally, we can start our Actors like this:
+
+```
+Actors.run [Actors::Input, Actors::Output]
+```
+
+Supporting this is simple enough:
+
+      def self.run(actors)
+        threads = actors.map(&:run)
+        threads.each(&:join)
+      end
+
+That ties up everything we wanted to do with our Actors module, so let's close
+it up:
+
+    end
+
+## Work
+
+Now that we've got our Actor backing logic and syntax set up, let's actually run
+example from earlier. This will create an echo chamber that will return anything
+the user types:
+
+    module Actors
+      actor :Input do
+        Output.push gets
+      end
+
+      actor :Output do
+        puts pop
+      end
+    end
+
+    Actors.run [Actors::Input, Actors::Output]
