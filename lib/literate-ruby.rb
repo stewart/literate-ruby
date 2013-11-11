@@ -3,7 +3,7 @@ require 'kramdown'
 
 module LiterateRuby
   class << self
-    attr_reader :input, :ruby, :html, :basename
+    attr_accessor :input, :ruby, :html, :basename
 
     INDENTED_CODE_REGEX = / # Match a MARKDOWN CODE section.
       (\r?\n)              # $1: CODE must be preceded by blank line
