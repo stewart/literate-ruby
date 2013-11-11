@@ -3,7 +3,7 @@ require 'kramdown'
 
 module LiterateRuby
   class << self
-    attr_accessor :input, :ruby, :html, :basename
+    attr_accessor :input, :output_dir, :ruby, :html, :basename
 
     INDENTED_CODE_REGEX = / # Match a MARKDOWN CODE section.
       (\r?\n)              # $1: CODE must be preceded by blank line
@@ -32,6 +32,7 @@ module LiterateRuby
 
       if File.exists?(file)
         @input = File.read file
+        @output_dir = File.dirname file
         @basename = File.basename file, '.litrb'
       else
         print_help
@@ -65,12 +66,12 @@ module LiterateRuby
     end
 
     def export_html
-      html_filename = File.expand_path("./#{@basename}.html")
+      html_filename = File.join(@output_dir, "#{@basename}.html")
       File.write html_filename, @html
     end
 
     def export_ruby
-      ruby_filename = File.expand_path("./#{@basename}.rb")
+      ruby_filename = File.join(@output_dir, "#{@basename}.rb")
       File.write ruby_filename, @ruby
     end
 
