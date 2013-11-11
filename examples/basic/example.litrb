@@ -1,0 +1,9 @@
+# Literate Programming Is Fun
+
+Literate programming is a great way to document your code, making it easily
+accessible and well-explained to the reader. For example, below we define
+a function that prints "Hello World", then run it.
+
+    def hello
+      puts "Hello, World!"
+    end
